@@ -4,9 +4,21 @@ import re
 # Load the summarizer once. It's recommended to handle model loading gracefully.
 # This assumes the model is available at the specified local path.
 local_model_path = "./distilbart-cnn-dailymail-finetuned"
+# Detect available device: prefer GPU when torch.cuda is available, otherwise fall back to CPU.
 try:
-    # Using device=-1 ensures it runs on CPU, which is more compatible for general use.
-    summarizer = pipeline("summarization", model=local_model_path, device=-1)
+    import torch
+    if torch.cuda.is_available():
+        device = 0  # first CUDA device for transformers pipeline
+        print("GPU detected (torch.cuda.is_available=True). Using GPU for summarization.")
+    else:
+        device = -1
+        print("No GPU detected. Using CPU for summarization (device=-1).")
+except Exception:
+    device = -1
+    print("Could not import torch — defaulting to CPU (device=-1). To enable GPU, install torch with CUDA support.")
+
+try:
+    summarizer = pipeline("summarization", model=local_model_path, device=device)
 except Exception as e:
     summarizer = None
     print(f"CRITICAL: Could not load the summarization model from '{local_model_path}'. Error: {e}")
@@ -22,14 +34,14 @@ def clean_text(text):
 
     # --- Specific Platform Link Removal ---
     platform_domains = [
-        'youtube\.com', 'youtu\.be', 'music\.youtube\.com',
-        'facebook\.com', 'fb\.watch', 'fb\.com',
-        'instagram\.com',
-        'twitter\.com', 't\.co',
-        'spotify\.com', 'open\.spotify\.com',
-        'music\.apple\.com',
-        'music\.amazon\.com',
-        'discord\.gg', 'discord\.com'
+        r'youtube\.com', r'youtu\.be', r'music\.youtube\.com',
+        r'facebook\.com', r'fb\.watch', r'fb\.com',
+        r'instagram\.com',
+        r'twitter\.com', r't\.co',
+        r'spotify\.com', r'open\.spotify\.com',
+        r'music\.apple\.com',
+        r'music\.amazon\.com',
+        r'discord\.gg', r'discord\.com'
     ]
     platform_link_pattern = r'https?://(www\.)?(' + '|'.join(platform_domains) + r')\S*'
     text = re.sub(platform_link_pattern, '', text, flags=re.IGNORECASE)

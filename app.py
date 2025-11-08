@@ -22,7 +22,7 @@ app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
 # --- API & Model Setup ---
-API_KEY = os.environ.get('YOUTUBE_API_KEY', 'AIzaSyC4ZwDopo_________Q4ZcB5Gw')
+API_KEY = os.environ.get('YOUTUBE_API_KEY', 'AIzaSyBnjFy3_______PHAMEyhD4')
 youtube = build("youtube", "v3", developerKey=API_KEY)
 # **FIX**: Load the correct advanced model file
 model = joblib.load("predictive_view_modelGBR.pkl")
@@ -213,6 +213,52 @@ def analyzer():
 
     return render_template("index.html", result=result, topic_summary=topic_summary,
                            categories=list(CATEGORY_MAP.keys()), form_data=form_data)
+
+@app.route('/summarizer', methods=['GET', 'POST'])
+def summarizer():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    error = None
+    summary_result = None
+    video_link = ''  # To keep the form populated
+
+    if request.method == 'POST':
+        video_link = request.form.get('video_link')
+        if not video_link:
+            error = "Please enter a video link."
+        else:
+            video_id = get_video_id_from_url(video_link)
+            
+            if not video_id:
+                error = "Invalid YouTube video link. Please check the URL."
+            else:
+                try:
+                    # 1. Fetch video details using your existing helper
+                    details = get_video_details([video_id])
+                    if not details:
+                        error = "Could not fetch video details. Check the link and API key."
+                    else:
+                        snippet = details[0]['snippet']
+                        title = snippet.get('title', 'N/A')
+                        channel = snippet.get('channelTitle', 'N/A')
+                        description = snippet.get('description', '')
+
+                        # 2. Summarize using your existing helper
+                        summary = safe_summarize(description)
+
+                        # 3. Package the results for the template
+                        summary_result = {
+                            'title': title,
+                            'channelTitle': channel,
+                            'summary': summary,
+                            'videoId': video_id
+                        }
+                except Exception as e:
+                    print(f"Error in /summarizer route: {e}")
+                    error = f"An unexpected error occurred."
+
+    return render_template('summarizer.html', summary_result=summary_result, error=error, video_link=video_link)
 
 
 @app.route('/manual', methods=['GET', 'POST'])

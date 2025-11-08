@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Summarizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .shape-purple {
+            background: rgba(139, 0, 139, 0.15);
+        }
+        .dark-theme .shape-purple {
+            background: rgba(186, 85, 211, 0.15);
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #8A2BE2;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-shapes">
+        <div class="shape-purple"></div>
+        <div class="shape-purple"></div>
+        <div class="shape-purple"></div>
+        <div class="shape-purple"></div>
+        <div class="shape-purple"></div>
+        <div class="shape-purple"></div>
+        <div class="shape-purple"></div>
+        <div class="shape-purple"></div>
+        <div class="shape-purple"></div>
+        <div class="shape-purple"></div>
+    </div>
+
+    <div class="header">
+        <div class="header-title">Video Summarizer</div>
+        <div class="header-controls">
+            <div class="theme-switcher">
+                <input type="checkbox" id="theme-toggle">
+                <label for="theme-toggle"></label>
+            </div>
+            <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="tabs">
+            <a href="{{ url_for('analyzer') }}" class="tab-link">Trending Analyzer</a>
+            <a href="{{ url_for('manual') }}" class="tab-link">Views Predictor</a>
+            <a href="{{ url_for('summarizer') }}" class="tab-link active">Video Summarizer</a>
+        </div>
+        <div class="form-card">
+            <h1>Video Summarizer</h1>
+            <form method="POST" id="summarize-form">
+                <label for="video_link">YouTube Video Link:</label>
+                <input type="text" name="video_link" id="video_link" value="{{ video_link if video_link else '' }}" placeholder="e.g., https://www.youtube.com/watch?v=..." required>
+                <button type="submit">Summarize Video</button>
+            </form>
+        </div>
+
+        <div id="loader" class="loader"></div>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% if summary_result %}
+        <div class="results-card">
+            <h2>Summary Result</h2>
+            <div class="video-block">
+                <div class="video-info">
+                    <b>Title:</b> {{ summary_result.title }}<br>
+                    <b>Channel:</b> {{ summary_result.channelTitle }}<br>
+                    <b>Summary:</b> {{ summary_result.summary }}<br>
+                </div>
+                <div class="video-embed">
+                    <iframe width="300" height="170"
+                            src="https://www.youtube.com/embed/{{ summary_result.videoId }}"
+                            frameborder="0"
+                            allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Theme switcher logic
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                body.classList.add('dark-theme');
+                themeToggle.checked = true;
+            } else {
+                body.classList.remove('dark-theme');
+                themeToggle.checked = false;
+            }
+        };
+        const currentTheme = localStorage.getItem('theme');
+        applyTheme(currentTheme);
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                localStorage.setItem('theme', 'dark');
+                applyTheme('dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+                applyTheme('light');
+            }
+        });
+
+        // Form submission loader
+        const form = document.getElementById('summarize-form');
+        const loader = document.getElementById('loader');
+        form.addEventListener('submit', () => {
+            loader.style.display = 'block';
+        });
+    });
+</script>
+</body>
+</html>

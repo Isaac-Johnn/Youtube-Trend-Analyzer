@@ -1,0 +1,12 @@
+flask
+pandas
+numpy
+python-dateutil
+google-api-python-client
+joblib
+transformers
+# Install torch separately with the appropriate CUDA support for your GPU.
+# Example (Windows, CUDA 11.8):
+# pip install --index-url https://download.pytorch.org/whl/cu118 torch torchvision torchaudio
+# Or CPU-only fallback:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu

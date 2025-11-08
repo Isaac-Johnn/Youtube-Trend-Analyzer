@@ -1,0 +1,10 @@
+# Virtual Environment
+venv/
+__pycache__/
+
+# Model files
+*.pkl
+distilbart-cnn-dailymail-finetuned/
+
+# OS files
+.DS_Store
